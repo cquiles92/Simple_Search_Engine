@@ -1,0 +1,517 @@
+type: edu
+custom_name: stage6
+files:
+- name: src/search/Main.java
+  visible: true
+  text: |
+    package search;
+
+    public class Main {
+        public static void main(String[] args) {
+            System.out.println("Hello World!");
+        }
+    }
+  learner_created: false
+- name: test/SearchEngineTests.java
+  visible: false
+  text: |
+    public class SearchEngineTests {
+        public static final String NAMES = "Kristofer Galley\n" +
+            "Fernando Marbury fernando_marbury@gmail.com\n" +
+            "Kristyn Nix nix-kris@gmail.com\n" +
+            "Regenia Enderle\n" +
+            "Malena Gray\n" +
+            "Colette Mattei\n" +
+            "Wendolyn Mcphillips\n" +
+            "Jim Gray\n" +
+            "Coreen Beckham\n" +
+            "Bob Yeh bobyeah@gmail.com\n" +
+            "Shannan Bob stropeshah@gmail.com\n" +
+            "Yer Fillion\n" +
+            "Margene Resendez marres@gmail.com\n" +
+            "Blossom Ambler\n" +
+            "Teri Ledet teri_ledet@gmail.com\n" +
+            "Dana Baron baron@gmail.com\n" +
+            "Abram Goldsberry\n" +
+            "Yer Leopold\n" +
+            "Stefania Trunzo\n" +
+            "Alexis Leopold\n" +
+            "Carlene Bob\n" +
+            "Oliver Dacruz\n" +
+            "Jonie Richter\n" +
+            "Pasquale Gallien gallien@evilcorp.com\n" +
+            "Verdie Gentle\n" +
+            "Gerardo Strouth gallien@evilcorp.com\n" +
+            "Agripina Bob\n" +
+            "Latricia Niebuhr\n" +
+            "Malena Schommer\n" +
+            "Drema Leopold\n" +
+            "Heide Payeur\n" +
+            "Ranae Digiovanni\n" +
+            "Simona Pereira\n" +
+            "Nick Digiovanni\n" +
+            "Angelita Wigington gallien@evilcorp.com\n" +
+            "Elin Gray\n" +
+            "Dwain Trunzo\n" +
+            "Boris Beiler\n" +
+            "Remi Malek fsociefy@gmail.com\n" +
+            "Demetria Hostetler gallien@evilcorp.com\n" +
+            "Nydia Mcduffie\n" +
+            "Florencio Defibaugh\n" +
+            "Warner Giblin\n" +
+            "Bob Mans\n" +
+            "Shu Gray\n" +
+            "Kaycee Gray\n" +
+            "Victorina Froehlich victory@gmail.com\n" +
+            "Roseanne Gray\n" +
+            "Erica Radford hisam@gmail.com\n" +
+            "Elyse Pauling";
+    }
+  learner_created: false
+- name: test/SimpleSearchEngineTest.java
+  visible: false
+  text: |
+    import org.hyperskill.hstest.stage.StageTest;
+    import org.hyperskill.hstest.testcase.CheckResult;
+    import org.hyperskill.hstest.testcase.TestCase;
+
+    import java.util.*;
+
+    class TestClue {
+        String input;
+
+        TestClue(String input) {
+            this.input = input;
+        }
+    }
+
+    public class SimpleSearchEngineTest extends StageTest<TestClue> {
+
+        @Override
+        public List<TestCase<TestClue>> generate() {
+            return Arrays.asList(
+                new TestCase<TestClue>().setAttach(
+                    new TestClue("1\n" +
+                    "ANY\n" +
+                    "bob gallien@evilcorp.com\n" +
+                    "2\n" +
+                    "1\n" +
+                    "NONE\n" +
+                    "bob gallien@evilcorp.com\n" +
+                    "0")).setInput("1\n" +
+                    "ANY\n" +
+                    "bob gallien@evilcorp.com\n" +
+                    "2\n" +
+                    "1\n" +
+                    "NONE\n" +
+                    "bob gallien@evilcorp.com\n" +
+                    "0")
+                    .addArguments("--data", "names.txt")
+                    .addFile("names.txt", SearchEngineTests.NAMES),
+
+
+                new TestCase<TestClue>().setAttach(new TestClue("2\n" +
+                    "1\n" +
+                    "ALL\n" +
+                    "this text never gonna be matched\n" +
+                    "2\n" +
+                    "0")).setInput("2\n" +
+                    "1\n" +
+                    "ALL\n" +
+                    "this text never gonna be matched\n" +
+                    "2\n" +
+                    "0")
+                    .addArguments("--data", "names.txt")
+                    .addFile("names.txt", SearchEngineTests.NAMES)
+            );
+        }
+
+        @Override
+        public CheckResult check(String reply, TestClue clue) {
+            String cR = "\n";
+            List<String> outputLines = new LinkedList<String>(Arrays.asList(reply.split(cR)));
+            String[] inputLines = clue.input.split(cR);
+            String[] reference;
+
+            reference = SearchEngineTests.NAMES.split("\n");
+
+            //clear the list of unnecessary lines, if any
+            List<String> cleanedOutput = new ArrayList<String>();
+            for (int i = 0; i < outputLines.size(); i++) {
+                if (containsItemFromList(outputLines.get(i), reference)) {
+                    cleanedOutput.add(outputLines.get(i).toLowerCase());
+                }
+            }
+
+            int currentInputLine = 0;
+            int currentOutputLine = 0;
+
+            int actionType = -1;
+
+            while (actionType != 0) {
+                try {
+                    actionType = Integer.parseInt(inputLines[currentInputLine]);
+                } catch (NumberFormatException e) {
+                    return new CheckResult(false,
+                        "The number of menu item must be number!");
+                }
+
+                switch (actionType) {
+                    case 1:
+                        currentInputLine++;
+
+                        List<Integer> result = new ArrayList<>();
+
+                        List<String> intendedResult = new ArrayList<>();
+
+                        while (true) {
+                            String mode = inputLines[currentInputLine].trim().toLowerCase();
+                            currentInputLine++;
+
+                            String toSearch = "";
+
+                            if (mode.equalsIgnoreCase("all")) {
+                                toSearch = inputLines[currentInputLine].trim().toLowerCase();
+                                currentInputLine++;
+                                String[] allChecks = toSearch.split(" ");
+
+                                for (String s : reference) {
+                                    s = s.toLowerCase();
+
+                                    boolean isPassedChecks = true;
+
+                                    for (String currCheck : allChecks) {
+                                        if (!(s.contains(" " + currCheck + " ")
+                                            || s.startsWith(currCheck + " ")
+                                            || s.endsWith(" " + currCheck))) {
+
+                                            isPassedChecks = false;
+                                            break;
+                                        }
+                                    }
+
+                                    if (isPassedChecks) {
+                                        intendedResult.add(s);
+                                    }
+                                }
+                                break;
+                            } else if (mode.equalsIgnoreCase("any")) {
+                                toSearch = inputLines[currentInputLine].trim().toLowerCase();
+                                currentInputLine++;
+                                String[] allChecks = toSearch.split(" ");
+
+                                for (String s : reference) {
+                                    s = s.toLowerCase();
+
+                                    boolean isPassedChecks = false;
+
+                                    for (String currCheck : allChecks) {
+                                        if (s.contains(" " + currCheck + " ")
+                                            || s.startsWith(currCheck + " ")
+                                            || s.endsWith(" " + currCheck)) {
+
+                                            isPassedChecks = true;
+                                            break;
+                                        }
+                                    }
+
+                                    if (isPassedChecks) {
+                                        intendedResult.add(s);
+                                    }
+                                }
+                                break;
+                            } else if (mode.equalsIgnoreCase("none")) {
+                                toSearch = inputLines[currentInputLine].trim().toLowerCase();
+                                currentInputLine++;
+                                String[] allChecks = toSearch.split(" ");
+
+                                for (String s : reference) {
+                                    s = s.toLowerCase();
+
+                                    boolean isPassedChecks = true;
+
+                                    for (String currCheck : allChecks) {
+                                        if (s.contains(" " + currCheck + " ")
+                                            || s.startsWith(currCheck + " ")
+                                            || s.endsWith(" " + currCheck)) {
+
+                                            isPassedChecks = false;
+                                            break;
+                                        }
+                                    }
+
+                                    if (isPassedChecks) {
+                                        intendedResult.add(s);
+                                    }
+                                }
+                                break;
+                            }
+                        }
+
+                        String[] userResult = new String[intendedResult.size()];
+                        for (int i = 0; i < intendedResult.size(); i++) {
+                            try {
+                                userResult[i] = cleanedOutput.get(currentOutputLine++);
+                            } catch (IndexOutOfBoundsException e) {
+                                return new CheckResult(false,
+                                    "Seems like you output less than expected. " +
+                                        "Either you've lost someone in the printing of all " +
+                                        "people, or you haven't printed all the necessary " +
+                                        "people in the search.");
+                            }
+                        }
+
+                        String[] correctOutput = intendedResult.toArray(String[]::new);
+
+                        Arrays.sort(correctOutput);
+                        Arrays.sort(userResult);
+
+                        if (!Arrays.equals(correctOutput, userResult)) {
+                            return new CheckResult(false,
+                                "Search result is not equal " +
+                                    "to the expected search");
+                        }
+                        break;
+                    case 2:
+                        currentInputLine++;
+
+                        List<String> intendedResultAll = new ArrayList<>();
+
+                        for (String s : reference) {
+                            s = s.toLowerCase();
+                            intendedResultAll.add(s);
+                        }
+
+                        String[] userResultAll = new String[intendedResultAll.size()];
+                        for (int i = 0; i < intendedResultAll.size(); i++) {
+                            try {
+                                userResultAll[i] = cleanedOutput.get(currentOutputLine++);
+                            } catch (IndexOutOfBoundsException e) {
+                                return new CheckResult(false,
+                                    "Seems like you output less than expected. " +
+                                        "Either you've lost someone in the printing of all " +
+                                        "people, or you haven't printed all the necessary " +
+                                        "people in the search.");
+                            }
+                        }
+
+                        String[] correctOutputAll = intendedResultAll.toArray(String[]::new);
+
+                        Arrays.sort(correctOutputAll);
+                        Arrays.sort(userResultAll);
+
+                        if (!Arrays.equals(correctOutputAll, userResultAll)) {
+                            return new CheckResult(false,
+                                "Looks like you're printing " +
+                                    "unknown people when you enter option 2.");
+                        }
+                        break;
+                    case 0:
+                        return CheckResult.correct();
+                    default:
+                        currentInputLine++;
+                        break;
+                }
+            }
+
+            return CheckResult.correct();
+        }
+
+        private static boolean containsItemFromList(String inputStr, String[] items) {
+            return Arrays.stream(items).parallel().anyMatch(inputStr::contains);
+        }
+    }
+  learner_created: false
+- name: src/search/SearchEngine.java
+  visible: true
+  text: |
+    package search;
+
+    import java.io.BufferedReader;
+    import java.io.FileNotFoundException;
+    import java.io.FileReader;
+    import java.io.IOException;
+    import java.util.*;
+
+    public class SearchEngine {
+        private final Scanner scanner;
+        private List<String> peopleDirectory;
+        private Map<String, List<Integer>> reverseIndex;
+
+        SearchEngine(String[] args) {
+            scanner = new Scanner(System.in);
+            //command line arguments
+            if (args.length > 0) {
+                if (args.length == 1) {
+                    System.out.println("Missing parameters. Default operation");
+                } // if filename is provided
+                else {
+                    // if the first argument == "--data"
+                    if (args[0].equals("--data")) {
+                        String fileName = args[1];
+                        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(fileName))) {
+                            //add strings to main repository of names/contact info
+                            //counter to indicate which current line
+                            //build reverseIndex by passing the currentLine and index
+                            String input;
+                            int currentLine = 0;
+                            peopleDirectory = new ArrayList<>();
+                            reverseIndex = new HashMap<>();
+                            while ((input = bufferedReader.readLine()) != null) {
+                                peopleDirectory.add(input);
+                                reverseIndexBuilder(input, currentLine++);
+                            }
+                        } catch (FileNotFoundException e) {
+                            System.out.println("File Not Found:");
+                        } catch (IOException e) {
+                            System.out.println("IO Exception");
+                        }
+                    } else {
+                        System.out.println("Invalid parameters. Default operation");
+                    }
+                }
+            }
+        }
+
+        public void start() {
+            //if there is no data initialized
+            if (peopleDirectory.isEmpty()) {
+                int numberOfLines = numberOfLinesInput();
+                peopleDirectory = readFromConsole(numberOfLines);
+            }
+            userSelect();
+        }
+
+        private int numberOfLinesInput() {
+            while (true) {
+                try {
+                    System.out.println("Enter the number of people:");
+                    return Integer.parseInt(scanner.nextLine());
+                } catch (NumberFormatException e) {
+                    System.out.println("Invalid input");
+                }
+            }
+        }
+
+        private List<String> readFromConsole(int numberOfLines) {
+            List<String> lineOfText = new ArrayList<>();
+            String currentLine;
+
+            System.out.println("Enter all people:");
+            for (int i = 0; i < numberOfLines; i++) {
+                currentLine = scanner.nextLine();
+                lineOfText.add(currentLine);
+            }
+
+            //buffer spacing after inputs
+            System.out.println();
+            return lineOfText;
+        }
+
+        private void menu() {
+            System.out.println("=== Menu ===\n" +
+                               "1. Find a person\n" +
+                               "2. Print all people\n" +
+                               "0. Exit");
+        }
+
+        private void userSelect() {
+            String input = null;
+            while (!"0".equals(input)) {
+                menu();
+                input = scanner.nextLine().trim();
+                System.out.println();
+                switch (input) {
+                    //search person
+                    case "1":
+                        personToFind();
+                        break;
+                    //print list
+                    case "2":
+                        printAllPeople();
+                        break;
+                    //quit the program
+                    case "0":
+                        break;
+                    default:
+                        System.out.println("Incorrect option! Try Again.\n");
+                }
+            }
+            System.out.println("Bye!");
+        }
+
+        private void personToFind() {
+            String searchInfo;
+            System.out.println("Enter a name or email to search all suitable people.");
+            searchInfo = scanner.nextLine();
+            String[] results = searchWord(searchInfo);
+            printResults(results);
+        }
+
+        private String[] searchWord(String searchTerm) {
+            List<String> results = new ArrayList<>();
+            if (reverseIndex.containsKey(searchTerm)) {
+                List<Integer> indexesOfResults = reverseIndex.get(searchTerm);
+                for (Integer index : indexesOfResults) {
+                    String searchResult = peopleDirectory.get(index);
+                    results.add(searchResult);
+                }
+            }
+            return results.toArray(new String[0]);
+        }
+
+        private void printResults(String[] searchResults) {
+            if (searchResults.length == 0) {
+                System.out.println("No matching people found.");
+            } else {
+                for (String contact : searchResults) {
+                    System.out.println(contact);
+                }
+            }
+            System.out.println();
+        }
+
+        private void printAllPeople() {
+            System.out.println("=== List of people ===");
+            for (String person : peopleDirectory) {
+                System.out.println(person);
+            }
+            System.out.println();
+        }
+
+        private void reverseIndexBuilder(String personInfo, int index) {
+            String[] listOfWords = personInfo.split(" ");
+            for (String word : listOfWords) {
+                //if reverseIndex doesn't have the word, make a new entry with the index
+                //else just add the index to arraylist of indexes
+                if (!reverseIndex.containsKey(word)) {
+                    reverseIndex.put(word, new ArrayList<>(List.of(index)));
+                } else {
+                    reverseIndex.get(word).add(index);
+                }
+            }
+        }
+    }
+  learner_created: true
+- name: src/search/SearchStrategy.java
+  visible: true
+  learner_created: true
+- name: src/search/SearchContext.java
+  visible: true
+  learner_created: true
+- name: src/search/MatchAllSearchStrategy.java
+  visible: true
+  learner_created: true
+- name: src/search/MatchAnySearchStrategy.java
+  visible: true
+  learner_created: true
+- name: src/search/MatchNoneSearchStrategy.java
+  visible: true
+  learner_created: true
+feedback_link: https://hyperskill.org/learn/step/5501#comment
+status: Solved
+feedback:
+  message: Well done! You've finished the project. Select a new project on <a href="https://hyperskill.org/projects">JetBrains
+    Academy</a> to continue learning.
+  time: Tue, 17 May 2022 18:26:33 UTC
+record: -1
